@@ -1,0 +1,80 @@
+---
+title: "Mini-Project 02"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+# Data Visualization Project 02
+
+Load Tidyverse,plotly, and SF libraries:
+```{r}
+library(tidyverse)
+library(sf)
+library(plotly)
+```
+
+Load the raw data into environment:
+```{r}
+# Navigate to \data folder and choose files
+search_babynames <- file.choose()
+# read the file using the read_csv() function
+babynames <- readRDS(search_babynames)
+# read the Florida Lakes shapes shp file
+Lake_shapes <- read_sf(file.choose())
+```
+
+```{r}
+#load htmlwidgets library
+library(htmlwidgets)
+#Generate a plot and assign a name
+n_jorge <- babynames %>%
+  filter(name=="Jorge") %>%
+  group_by(year) %>%
+  summarize(Total=sum(n)) %>%
+  rename(Year="year")
+p1<-ggplot(n_jorge,mapping=aes(x=Year,y=Total)) +
+  geom_point() +
+  labs(title = "Number of Babies Named Jorge",
+         x = "Year",
+         y = "Total Babies") +
+  theme_minimal()
+#Make it interactive
+interactive_plot <- ggplotly(p1)
+interactive_plot
+#Save as self-contained HTML
+saveWidget(interactive_plot, "fancy_plot.html")
+```
+
+```{r}
+#Fit a linear model and get the coefficients
+model <- lm(Total~Year,data = n_jorge)
+coefficients <- summary(model)$coefficients
+print(coefficients)
+
+p3<-p1 +
+  geom_smooth(method="loess")
+p3
+```
+
+
+
+```{r}
+p2<-ggplot() +
+  geom_sf(data = Lake_shapes, aes(fill = PERIMETER),color="black") +
+  scale_fill_viridis_c() +
+  labs(title = "Florida Lakes Perimeters",
+       fill = "Perimeter Length (ft)") +
+  theme_minimal()
+p2
+#Make it interactive
+#interactive_plot <- ggplotly(p2)
+#interactive_plot
+#Save as self-contained HTML
+#saveWidget(interactive_plot, "Lake Perimeters.html")
+```
+## Summary of Findings
+I started trying to plot the voting data from another data frame but stopped because I wanted to create something more unique. I decided to create a trend graph of how many babies were named Jorge throughout the years. Then I fit a linear model to the data to be able to visualize the growth trend but realized that it is not smooth enough to match the end result.Then I used a 'loess' argument in the geom_smooth function to add more curvature, but I still have some points outside the confidence interval of the model. Overall, it shows the main idea that the number of Jorges has been steadily increasing and now is starting to decline. In practice, I have met way less George's or Jorges in the past couple of years compared to when I was little. So it checks out! It is sad the the convention of Jorges may be empty in the next couple of years though.
+I was able to map out the perimeters of the lakes in florida meaning that the biggest lakes are mostly found in the south and central region of the state. This may be tied to the fact that earth is flatter in central and south florida due to filling and erosion that happen since we are a peninsula.
